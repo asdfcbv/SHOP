@@ -17,4 +17,4 @@ urls.py         | Связывающий файл
 templates       | Папка с HTML файлами
 settings.py     | Настройки
 
-![Пример]!()
+![Пример](imgshop.png)
