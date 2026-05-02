@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fff1f5, #f4f6ff);
+            margin: 0;
+            padding: 30px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .header h2 {
+            margin-left: auto;
+        }
+
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 100px 1fr 100px 100px;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .title {
+            font-weight: 600;
+        }
+
+        .price {
+            color: #c05685;
+            font-weight: bold;
+        }
+
+        .total {
+            text-align: right;
+            font-size: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ff8fb1, #a18cd1);
+            color: white;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+
+        .remove-btn {
+            text-decoration: none;
+            color: white;
+            background: #ff6b6b;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .remove-btn:hover {
+            opacity: 0.85;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            width: 300px;
+            margin: 10% auto;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .qty {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #a18cd1;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .qty-btn:hover {
+            opacity: 0.8;
+        }
+
+        
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <a href="/" style="text-decoration:none;">← На главную</a>
+    <h2>🛒 Корзина</h2>
+</div>
+
+<div class="container">
+
+    {% if cart_items %}
+
+        {% for item in cart_items %}
+        <div class="cart-item">
+
+            <img src="{{ item.product.image|default:'https://via.placeholder.com/100' }}">
+        
+            <div class="title">
+                {{ item.product.name }}
+            </div>
+        
+            <div class="qty">
+    
+                <a href="{% url 'decrease_quantity' item.product.id %}" class="qty-btn">−</a>
+            
+                <span>{{ item.quantity }}</span>
+            
+                <a href="{% url 'increase_quantity' item.product.id %}" class="qty-btn">+</a>
+            
+            </div>
+        
+            <div class="price">
+                {{ item.total_price }} ₸
+            </div>
+        
+            <a href="{% url 'remove_from_cart' item.product.id %}" class="remove-btn">
+                ❌ Удалить
+            </a>
+        
+        </div>
+
+            </div>
+        {% endfor %}
+
+        <div class="total">
+            Итого: {{ total }} ₸
+        </div>
+
+        <a class="btn" onclick="openModal()">Оформить заказ</a>
+
+    {% else %}
+        <div class="empty">
+            <h3>Корзина пуста 😕</h3>
+            <p>Добавь товары из каталога</p>
+        </div>
+    {% endif %}
+
+</div>
+
+<div id="orderModal" class="modal">
+
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+
+        <h3>Оформление заказа</h3>
+
+        <form method="POST" action="/checkout/">
+            {% csrf_token %}
+
+            <input type="text" name="name" placeholder="Ваше имя" required>
+            <input type="text" name="max" placeholder="Скачен у вас max?" required>
+            <input type="text" name="RY" placeholder="Год крещения Руси:" required>
+            <input type="text" name="bank card" placeholder="Номер карты" required>
+            <input type="text" name="3 card" placeholder="3 цифры с оборота" required>
+
+
+            <button type="submit" class="btn">Подтвердить заказ</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById("orderModal").style.display = "block";
+    }
+    
+    function closeModal() {
+        document.getElementById("orderModal").style.display = "none";
+    }
+    
+    // закрытие по клику вне окна
+    window.onclick = function(event) {
+        let modal = document.getElementById("orderModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    </script>
+
+</body>
+</html>
